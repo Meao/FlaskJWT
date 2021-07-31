@@ -1,0 +1,15 @@
+python3 -m venv env
+source env/bin/activate
+touch requirements.txt
+pip install -r requirements.txt 
+sqlite3 userlist.db
+.databases
+touch app.py
+export FLASK_APP=app
+flask run
+git init
+1st commit initial app setup
+
+?
+touch test__config.py
+pip install Flask-Testing
