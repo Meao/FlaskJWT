@@ -8,7 +8,8 @@ from werkzeug.security import generate_password_hash, check_password_hash
 
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY') or 'you-would-not-believe-it'
+SECRET_KEY = os.environ.get('SECRET_KEY') or 'you-would-not-believe-it'
+app.config['SECRET_KEY'] = SECRET_KEY
 basedir = os.path.abspath(os.path.dirname(__file__))
 baseDB = os.path.join(basedir, 'userlist.db')
 app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL') or \
@@ -21,7 +22,6 @@ class Users(db.Model):
     __tablename__ = "user"
     id = db.Column(db.Integer(), primary_key=True, autoincrement=True)
     username = db.Column(db.String(150), nullable=False)
-    password = db.Column(db.String(20))
     first_name = db.Column(db.String(30))
     last_name = db.Column(db.String(150))
     password = db.Column(db.String(50), nullable=False)
@@ -35,14 +35,24 @@ def token_required(f):
         token = None
         if 'x-access-tokens' in request.headers:
             token = request.headers['x-access-tokens']
+            print('token', token)
         if not token:
-            return jsonify({'message': 'a valid token is missing'})
+            return jsonify({'message': 'a valid token is missing'}), 401
         try:
-            data = jwt.decode(token, app.config[SECRET_KEY])
-            current_user = Users.query.filter_by(is_active=data['is_active']).first()
-        except:
-            return jsonify({'message': 'the token is invalid'})
+            print('does it even get here')
+            data = jwt.decode(token, app.secret_key, algorithms=["HS256"])
+            print('data', data)
+            current_user = Users.query.filter_by(id=data['id']).first()
+            print('current_user', current_user)
             return f(current_user, *args, **kwargs)
+        except jwt.DecodeError:
+            return jsonify({'message': 'DecodeError'}), 401
+        except jwt.exceptions.ExpiredSignatureError:
+            return jsonify({'message': 'Token has expired'}), 401
+        except:
+            import sys
+            print ("Unexpected error:", sys.exc_info())
+            return jsonify({'message': 'the token is invalid'}), 401
     return decorator
 
 @app.route('/register/', methods=['GET', 'POST'])
@@ -60,13 +70,31 @@ def signup_user():
 @app.route('/login/', methods=['GET', 'POST'])  
 def login_user(): 
     auth = request.authorization   
-    if not auth or not auth.username or not auth.password:  
-        return make_response('could not verify', 401, {'WWW.Authentication': 'Basic realm: "login required"'})
-    user = Users.query.filter_by(username=auth.username).first()
-    if check_password_hash(user.password, auth.password):  
-        token = jwt.encode({'id': user.id, 'exp' : datetime.utcnow() + timedelta(minutes=30)}, app.config['SECRET_KEY'])  
-        return jsonify({'token' : token}) 
-    return make_response('could not verify',  401, {'WWW.Authentication': 'Basic realm: "login required"'})
+    if auth:
+        if not auth.username or not auth.password:  
+            return make_response('could not verify', 401, {'WWW.Authentication': 'Basic realm: "login required"'})
+        user = Users.query.filter_by(username=auth.username).first()
+        if check_password_hash(user.password, auth.password):  
+            token = jwt.encode({'id': user.id, 'exp' : datetime.utcnow() + timedelta(minutes=30)}, app.secret_key)  
+            return jsonify({'token' : token}) 
+    else:
+        return '<p>To log in and get a token use Authorization Type Basic Auth.</p>'
+
+@app.route('/users/', methods=['GET'])
+@token_required
+def get_all_users(current_user):  
+    users = Users.query.all() 
+    result = []   
+    for user in users:   
+        user_data = {}   
+        user_data['username'] = user.username 
+        user_data['first_name'] = user.first_name 
+        user_data['last_name'] = user.last_name 
+        user_data['is_active'] = user.is_active 
+        user_data['last_login'] = user.last_login  
+        user_data['is_superuser'] = user.is_superuser 
+        result.append(user_data)   
+    return jsonify({'users': result})
 
 
 # if __name__ == "__main__":

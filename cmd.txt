@@ -17,12 +17,14 @@ from app import db
 db.create_all()
 cmd+shift+p sqlite: open database sqlite explorer
 sign up route
-postman POST http://127.0.0.1:5000/register Headers Content-Type application/json Body {"username" : "marina", "password" : "trytrytry"} Send
+postman POST http://127.0.0.1:5000/register/ Headers Content-Type application/json Body {"username" : "marina", "password" : "trytrytry"} Send
 log in route
 postman Authorization Type Basic Auth
 {
-    "token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpZCI6MiwiZXhwIjoxNjI3ODA2MDUwfQ.CGL_1pzgmBcvDh4OH5-b4pq5y_wgPZXiIgDWM-bHMY8"
+    "token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpZCI6MiwiZXhwIjoxNjI3ODA5NTk0fQ.rX2Hu0UV7OgR2-lteo9ex-g8X2jDD7fmzcOt1ilTV1Y"
 }
+implement get all users route
+postman GET http://127.0.0.1:5000/users/ Headers Content-Type application/json x-access-tokens eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpZCI6MiwiZXhwIjoxNjI3ODA5NTk0fQ.rX2Hu0UV7OgR2-lteo9ex-g8X2jDD7fmzcOt1ilTV1Y
 
 
 ?
