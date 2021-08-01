@@ -8,7 +8,11 @@ touch app.py
 export FLASK_APP=app
 flask run
 git init
-1st commit initial app setup
+git add .
+git commit -m "initial app setup"
+python3
+from app import db
+db.create_all()
 
 ?
 touch test__config.py

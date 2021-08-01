@@ -1,4 +1,4 @@
-import datetime
+from datetime import datetime
 from flask import Flask, request, jsonify, make_response
 from flask_sqlalchemy import SQLAlchemy
 from functools import wraps
@@ -28,9 +28,15 @@ class Users(db.Model):
     last_name = db.Column(db.String(150))
     password = db.Column(db.String(50), nullable=False)
     is_active = db.Column(db.Boolean, nullable=False)
-    last_login = db.Column(db.DateTime, default=datetime.utcnow)
+    last_login = db.Column(db.DateTime, default=datetime.utcnow())
     is_superuser = db.Column(db.Boolean)
 
 @app.route("/")
 def hello_world():
     return "<p>Hello, World!</p>"
+
+
+# if __name__ == "__main__":
+#     # db setup only! run once!
+#     db.drop_all()  # destroy all the tables.
+#     db.create_all()  # create all fresh new tables.
