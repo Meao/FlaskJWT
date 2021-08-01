@@ -16,7 +16,14 @@ python3
 from app import db
 db.create_all()
 cmd+shift+p sqlite: open database sqlite explorer
+sign up route
 postman POST http://127.0.0.1:5000/register Headers Content-Type application/json Body {"username" : "marina", "password" : "trytrytry"} Send
+log in route
+postman Authorization Type Basic Auth
+{
+    "token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpZCI6MiwiZXhwIjoxNjI3ODA2MDUwfQ.CGL_1pzgmBcvDh4OH5-b4pq5y_wgPZXiIgDWM-bHMY8"
+}
+
 
 ?
 touch test__config.py

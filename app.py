@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 from flask import Flask, request, jsonify, make_response
 from flask_sqlalchemy import SQLAlchemy
 from functools import wraps
@@ -45,14 +45,28 @@ def token_required(f):
             return f(current_user, *args, **kwargs)
     return decorator
 
-@app.route('/register', methods=['GET', 'POST'])
+@app.route('/register/', methods=['GET', 'POST'])
 def signup_user():  
-    data = request.get_json()  
-    hashed_password = generate_password_hash(data['password'], method='sha256')
-    new_user = Users(username=data['username'], password=hashed_password, is_active=True, is_superuser=False) 
-    db.session.add(new_user)  
-    db.session.commit()    
-    return jsonify({'message': 'registered successfully'})
+    if request.method == 'POST':
+        data = request.get_json()  
+        hashed_password = generate_password_hash(data['password'], method='sha256')
+        new_user = Users(username=data['username'], password=hashed_password, is_active=True, is_superuser=False) 
+        db.session.add(new_user)  
+        db.session.commit()    
+        return jsonify({'message': 'registered successfully'})
+    else:
+        return '<p>To sign up post a request body such as {"username" : "nickname", "password" : "password"}.</p>'
+
+@app.route('/login/', methods=['GET', 'POST'])  
+def login_user(): 
+    auth = request.authorization   
+    if not auth or not auth.username or not auth.password:  
+        return make_response('could not verify', 401, {'WWW.Authentication': 'Basic realm: "login required"'})
+    user = Users.query.filter_by(username=auth.username).first()
+    if check_password_hash(user.password, auth.password):  
+        token = jwt.encode({'id': user.id, 'exp' : datetime.utcnow() + timedelta(minutes=30)}, app.config['SECRET_KEY'])  
+        return jsonify({'token' : token}) 
+    return make_response('could not verify',  401, {'WWW.Authentication': 'Basic realm: "login required"'})
 
 
 # if __name__ == "__main__":
