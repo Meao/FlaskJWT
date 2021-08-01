@@ -5,14 +5,18 @@ pip install -r requirements.txt
 sqlite3 userlist.db
 .databases
 touch app.py
+imports, simple config, route from official doc
 export FLASK_APP=app
 flask run
 git init
 git add .
 git commit -m "initial app setup"
+data model for a table
 python3
 from app import db
 db.create_all()
+cmd+shift+p sqlite: open database sqlite explorer
+postman POST http://127.0.0.1:5000/register Headers Content-Type application/json Body {"username" : "marina", "password" : "trytrytry"} Send
 
 ?
 touch test__config.py

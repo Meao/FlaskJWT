@@ -4,12 +4,10 @@ from flask_sqlalchemy import SQLAlchemy
 from functools import wraps
 import jwt
 import os
-import uuid
 from werkzeug.security import generate_password_hash, check_password_hash
 
 
 app = Flask(__name__)
-
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY') or 'you-would-not-believe-it'
 basedir = os.path.abspath(os.path.dirname(__file__))
 baseDB = os.path.join(basedir, 'userlist.db')
@@ -31,9 +29,30 @@ class Users(db.Model):
     last_login = db.Column(db.DateTime, default=datetime.utcnow())
     is_superuser = db.Column(db.Boolean)
 
-@app.route("/")
-def hello_world():
-    return "<p>Hello, World!</p>"
+def token_required(f):
+    @wraps(f)
+    def decorator(*args, **kwargs):
+        token = None
+        if 'x-access-tokens' in request.headers:
+            token = request.headers['x-access-tokens']
+        if not token:
+            return jsonify({'message': 'a valid token is missing'})
+        try:
+            data = jwt.decode(token, app.config[SECRET_KEY])
+            current_user = Users.query.filter_by(is_active=data['is_active']).first()
+        except:
+            return jsonify({'message': 'the token is invalid'})
+            return f(current_user, *args, **kwargs)
+    return decorator
+
+@app.route('/register', methods=['GET', 'POST'])
+def signup_user():  
+    data = request.get_json()  
+    hashed_password = generate_password_hash(data['password'], method='sha256')
+    new_user = Users(username=data['username'], password=hashed_password, is_active=True, is_superuser=False) 
+    db.session.add(new_user)  
+    db.session.commit()    
+    return jsonify({'message': 'registered successfully'})
 
 
 # if __name__ == "__main__":
