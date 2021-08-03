@@ -71,6 +71,9 @@ def login_user():
             return make_response('could not verify', 401, {'WWW.Authentication': 'Basic realm: "login required"'})
         user = Users.query.filter_by(username=auth.username).first()
         if check_password_hash(user.password, auth.password):  
+            user.last_login = datetime.utcnow()
+            db.session.merge(user)  
+            db.session.commit() 
             token = jwt.encode({'id': user.id, 'exp' : datetime.utcnow() + timedelta(minutes=30)}, app.secret_key)  
             return jsonify({'token' : token}) 
     else:
@@ -104,6 +107,22 @@ def delete_user(current_user, id):
         return jsonify({'message': 'user deleted'})
     else:
         return '<p>You know how to become a superuser, right?</p>'
+
+@app.route('/users/<id>', methods=['PATCH'])
+@token_required
+def add_name_user(current_user, id): 
+    data = request.get_json()  
+    user_to_update = Users.query.filter_by(id=id).first() 
+    if not user_to_update:   
+        return jsonify({'message': 'user does not exist'})
+    user_to_update.first_name = data['first_name']
+    user_to_update.last_name = data['last_name']
+    if current_user.is_superuser:
+        user_to_update.is_active = data['is_active']
+        user_to_update.is_superuser = data['is_superuser']
+    db.session.merge(user_to_update)   
+    db.session.commit() 
+    return jsonify({'message': 'user info updated according to your access rights'})
 
 
 if  __name__ == '__main__':  

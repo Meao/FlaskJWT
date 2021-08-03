@@ -26,6 +26,7 @@ postman Authorization Type Basic Auth
 implement get all users route
 postman GET http://127.0.0.1:5000/users/ Headers Content-Type application/json x-access-tokens eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpZCI6MiwiZXhwIjoxNjI3ODA5NTk0fQ.rX2Hu0UV7OgR2-lteo9ex-g8X2jDD7fmzcOt1ilTV1Y
 create a superuser {"username" : "suser", "password" : "csup"} and implement update/delete
+update part of user info route, input data format {"first_name" : "", "last_name" : "", "is_active" : 1, "is_superuser" : 1} 
 
 ?
 touch test__config.py
