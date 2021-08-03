@@ -35,15 +35,11 @@ def token_required(f):
         token = None
         if 'x-access-tokens' in request.headers:
             token = request.headers['x-access-tokens']
-            print('token', token)
         if not token:
             return jsonify({'message': 'a valid token is missing'}), 401
         try:
-            print('does it even get here')
             data = jwt.decode(token, app.secret_key, algorithms=["HS256"])
-            print('data', data)
             current_user = Users.query.filter_by(id=data['id']).first()
-            print('current_user', current_user)
             return f(current_user, *args, **kwargs)
         except jwt.DecodeError:
             return jsonify({'message': 'DecodeError'}), 401
@@ -96,8 +92,19 @@ def get_all_users(current_user):
         result.append(user_data)   
     return jsonify({'users': result})
 
+@app.route('/users/<id>', methods=['DELETE'])
+@token_required
+def delete_user(current_user, id):  
+    if current_user.is_superuser:
+        user_to_del = Users.query.filter_by(id=id).first()   
+        if not user_to_del:   
+            return jsonify({'message': 'user does not exist'})
+        db.session.delete(user_to_del)  
+        db.session.commit()   
+        return jsonify({'message': 'user deleted'})
+    else:
+        return '<p>You know how to become a superuser, right?</p>'
 
-# if __name__ == "__main__":
-#     # db setup only! run once!
-#     db.drop_all()  # destroy all the tables.
-#     db.create_all()  # create all fresh new tables.
+
+if  __name__ == '__main__':  
+    app.run(debug=True)
